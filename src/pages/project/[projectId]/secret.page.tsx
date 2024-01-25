@@ -81,7 +81,7 @@ function OAuthSection() {
                     <Label>OAuth 활성화</Label>
                     <Switch />
                 </div>
-                <div className="grid w-full max-w-sm items-center gap-1.5">
+                <div className="grid w-full items-center gap-1.5">
                     <Label>Redirect URL</Label>
                     {redirectUrls.map((url, index) => (
                         <div className="flex gap-1" key={index}>
