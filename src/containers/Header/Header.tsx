@@ -92,7 +92,7 @@ export function Header() {
                         asChild
                     >
                         <a href="https://bluessu.notion.site" target="_blank">
-                            ↖︎ 문서
+                            문서
                         </a>
                     </Button>
                     <HeaderUser />

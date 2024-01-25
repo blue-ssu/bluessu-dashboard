@@ -42,7 +42,9 @@ export function ProjectHead({
                             alt=""
                             className="w-[40px] h-[40px]"
                         />
-                        <h1 className="font-bold text-5xl">{project?.name}</h1>
+                        <h1 className="font-bold text-3xl md:text-5xl">
+                            {project?.name}
+                        </h1>
                     </div>
                 ) : (
                     <Skeleton className="w-[200px] h-[48px]" />

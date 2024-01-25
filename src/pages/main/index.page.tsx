@@ -21,7 +21,7 @@ function MainHeader() {
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" asChild>
                         <a href="https://bluessu.notion.site" target="_blank">
-                            ↖︎ 문서
+                            문서
                         </a>
                     </Button>
                     <div className="flex items-center">
