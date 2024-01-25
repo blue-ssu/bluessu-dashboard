@@ -86,6 +86,8 @@ export const CoreUpdateProject: Endpoint<
         "iconURL",
         "termsURL",
         "privacyURL",
+        "redirectURLs",
+        "oAuthStatus",
     ],
 };
 export type CoreUpdateProjectPathParameters = {
@@ -98,11 +100,34 @@ export type CoreUpdateProjectBodyParameters = {
     iconURL?: string;
     termsURL?: string;
     privacyURL?: string;
+    redirectURLs?: string[];
+    oAuthStatus?: "Active" | "Inactive";
 };
 
 export type CoreUpdateProjectParameters = CoreUpdateProjectPathParameters &
     CoreUpdateProjectBodyParameters;
 export type CoreUpdateProjectResponse = {
+    project: ProjectObject;
+};
+
+/**
+ * POST /projects/:projectId/client-secret
+ * 프로젝트의 클라이언트 시크릿을 생성합니다.
+ */
+export const CoreGenerateProjectClientSecret: Endpoint<
+    CoreGenerateProjectClientSecretParameters,
+    CoreGenerateProjectClientSecretResponse
+> = {
+    path: (e) => `/projects/${e.projectId}/client-secret`,
+    method: "POST",
+    pathParams: ["projectId"],
+};
+export type CoreGenerateProjectClientSecretPathParameters = {
+    projectId: number;
+};
+export type CoreGenerateProjectClientSecretParameters =
+    CoreGenerateProjectClientSecretPathParameters;
+export type CoreGenerateProjectClientSecretResponse = {
     project: ProjectObject;
 };
 

@@ -3,6 +3,7 @@ import {
     CoreAddMemberToProject,
     CoreCreateProject,
     CoreDeleteProject,
+    CoreGenerateProjectClientSecret,
     CoreGetProject,
     CoreGetUser,
     CoreListProject,
@@ -23,6 +24,10 @@ export class Client extends EndpointClient {
     readonly CoreGetProject = this.endpointBuilder(CoreGetProject);
     readonly CoreUpdateProject = this.endpointBuilder(CoreUpdateProject);
     readonly CoreDeleteProject = this.endpointBuilder(CoreDeleteProject);
+
+    readonly CoreGenerateProjectClientSecret = this.endpointBuilder(
+        CoreGenerateProjectClientSecret
+    );
 
     // ProjectMember
     readonly CoreListProjectMember = this.endpointBuilder(
