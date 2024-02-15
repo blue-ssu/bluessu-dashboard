@@ -1,6 +1,7 @@
 import { client } from "@/lib/client";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { APIResponseError } from "endpoint-client";
 
 export function useUser(option?: { requireLogin?: boolean }) {
     const navigate = useNavigate();
@@ -9,8 +10,17 @@ export function useUser(option?: { requireLogin?: boolean }) {
     const { data: user } = useQuery({
         queryKey: ["user", "me"],
         queryFn: async () => {
-            const res = await client.CoreGetUser({ userId: "me" });
-            return res.user;
+            try {
+                const res = await client.CoreGetUser({ userId: "me" });
+                return res.user;
+            } catch (err) {
+                if (err instanceof APIResponseError) {
+                    if (err.body.code === "invalid_token") {
+                        localStorage.removeItem("token");
+                        navigate("/auth/signin");
+                    }
+                }
+            }
         },
         retry: false,
     });
