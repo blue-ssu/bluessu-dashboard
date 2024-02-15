@@ -16,9 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import * as z from "zod";
 import { Textarea } from "@/components/ui/textarea";
-import { useMutation, useQueryClient } from "react-query";
 import { client } from "@/lib/client";
 import { toast } from "sonner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const formSchema = z.object({
     name: z
@@ -41,8 +41,8 @@ const formSchema = z.object({
 export function CreateProjectForm() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const { mutate, isLoading } = useMutation(
-        (values: z.infer<typeof formSchema>) =>
+    const { mutate, isPending } = useMutation({
+        mutationFn: (values: z.infer<typeof formSchema>) =>
             client.CoreCreateProject({
                 name: values.name,
                 description: values.description,
@@ -51,20 +51,18 @@ export function CreateProjectForm() {
                 termsURL: values.termsURL,
                 privacyURL: values.privacyURL,
             }),
-        {
-            onSuccess: (res) => {
-                queryClient.invalidateQueries(["projects"]);
-                toast.success(<>{res.project.name} 프로젝트를 생성했어요!</>);
-                navigate(`/projects/${res.project.id}`);
-            },
-            onError: (err) => {
-                console.error(err);
-                toast.error(
-                    "프로젝트 생성에 실패했어요. 개발자 콘솔을 확인해주세요"
-                );
-            },
-        }
-    );
+        onSuccess: (res) => {
+            queryClient.invalidateQueries({ queryKey: ["projects"] });
+            toast.success(<>{res.project.name} 프로젝트를 생성했어요!</>);
+            navigate(`/projects/${res.project.id}`);
+        },
+        onError: (err) => {
+            console.error(err);
+            toast.error(
+                "프로젝트 생성에 실패했어요. 개발자 콘솔을 확인해주세요"
+            );
+        },
+    });
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -167,7 +165,7 @@ export function CreateProjectForm() {
                         </FormItem>
                     )}
                 />
-                <Button type="submit" disabled={isLoading}>
+                <Button type="submit" disabled={isPending}>
                     Submit
                 </Button>
             </form>

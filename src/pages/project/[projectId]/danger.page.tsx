@@ -26,9 +26,9 @@ import {
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useState } from "react";
 import { client } from "@/lib/client";
-import { useMutation } from "react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 
 function DeleteProjectDialog({ projectId }: { projectId?: number }) {
     const { project, isOwner } = useProject(projectId);
@@ -37,20 +37,19 @@ function DeleteProjectDialog({ projectId }: { projectId?: number }) {
     const navigate = useNavigate();
     const isMobile = useIsMobile();
 
-    const { mutate: deleteProject, isLoading } = useMutation(
-        () => client.CoreDeleteProject({ projectId: +(project?.id || "") }),
-        {
-            onSuccess: () => {
-                toast.success("프로젝트를 삭제했어요.");
-                navigate("/projects");
-                setOpen(false);
-            },
-            onError: (error) => {
-                console.error(error);
-                toast.error("프로젝트 삭제에 실패했어요.");
-            },
-        }
-    );
+    const { mutate: deleteProject, isPending } = useMutation({
+        mutationFn: () =>
+            client.CoreDeleteProject({ projectId: +(project?.id || "") }),
+        onSuccess: () => {
+            toast.success("프로젝트를 삭제했어요.");
+            navigate("/projects");
+            setOpen(false);
+        },
+        onError: (error) => {
+            console.error(error);
+            toast.error("프로젝트 삭제에 실패했어요.");
+        },
+    });
 
     if (isMobile) {
         return (
@@ -76,7 +75,7 @@ function DeleteProjectDialog({ projectId }: { projectId?: number }) {
                         <Button
                             variant="destructive"
                             onClick={() => deleteProject()}
-                            disabled={isLoading}
+                            disabled={isPending}
                         >
                             프로젝트 삭제
                         </Button>
@@ -111,7 +110,7 @@ function DeleteProjectDialog({ projectId }: { projectId?: number }) {
                     <Button
                         variant="destructive"
                         onClick={() => deleteProject()}
-                        disabled={isLoading}
+                        disabled={isPending}
                     >
                         프로젝트 삭제
                     </Button>

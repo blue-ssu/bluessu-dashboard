@@ -15,9 +15,9 @@ import { Header } from "@/containers/Header/Header";
 import { useProject } from "@/hooks/useProject";
 import { CoreUpdateProjectBodyParameters, client } from "@/lib/client";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useMutation, useQueryClient } from "react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -67,8 +67,8 @@ export function ProjectPage() {
             });
     }, [form, project]);
 
-    const { mutate, isLoading } = useMutation(
-        (values: CoreUpdateProjectBodyParameters) =>
+    const { mutate, isPending } = useMutation({
+        mutationFn: (values: CoreUpdateProjectBodyParameters) =>
             client.CoreUpdateProject({
                 projectId: +(projectId || ""),
                 name: values.name,
@@ -78,21 +78,19 @@ export function ProjectPage() {
                 termsURL: values.termsURL,
                 privacyURL: values.privacyURL,
             }),
-        {
-            onSuccess: (res) => {
-                queryClient.invalidateQueries(["projects"]);
-                toast.success(
-                    <>{res.project.name} 프로젝트를 업데이트했어요!</>
-                );
-            },
-            onError: (err) => {
-                console.error(err);
-                toast.error(
-                    "프로젝트 생성에 실패했어요. 개발자 콘솔을 확인해주세요"
-                );
-            },
-        }
-    );
+        onSuccess: (res) => {
+            queryClient.invalidateQueries({
+                queryKey: ["projects", projectId],
+            });
+            toast.success(<>{res.project.name} 프로젝트를 업데이트했어요!</>);
+        },
+        onError: (err) => {
+            console.error(err);
+            toast.error(
+                "프로젝트 생성에 실패했어요. 개발자 콘솔을 확인해주세요"
+            );
+        },
+    });
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
         mutate({
@@ -221,7 +219,7 @@ export function ProjectPage() {
                             )}
                         />
                         {isOwner ? (
-                            <Button type="submit" disabled={isLoading}>
+                            <Button type="submit" disabled={isPending}>
                                 수정
                             </Button>
                         ) : (

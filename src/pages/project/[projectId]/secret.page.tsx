@@ -27,9 +27,9 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useProject } from "@/hooks/useProject";
 import { client } from "@/lib/client";
 import { EyeClosedIcon, EyeOpenIcon, MinusIcon } from "@radix-ui/react-icons";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { APIResponseError } from "endpoint-client";
 import { useEffect, useRef, useState } from "react";
-import { useMutation, useQueryClient } from "react-query";
 import { toast } from "sonner";
 
 function GenerateClientSecretDialog() {
@@ -38,23 +38,23 @@ function GenerateClientSecretDialog() {
     const queryClient = useQueryClient();
     const isMobile = useIsMobile();
 
-    const { mutate: generateSecret, isLoading } = useMutation(
-        () =>
+    const { mutate: generateSecret, isPending } = useMutation({
+        mutationFn: () =>
             client.CoreGenerateProjectClientSecret({
                 projectId: +(project?.id || ""),
             }),
-        {
-            onSuccess: () => {
-                toast.success("토큰을 생성했어요.");
-                setOpen(false);
-                queryClient.invalidateQueries(["projects", project?.id]);
-            },
-            onError: (error) => {
-                console.error(error);
-                toast.error("토큰 생성에 실패했어요.");
-            },
-        }
-    );
+        onSuccess: () => {
+            toast.success("토큰을 생성했어요.");
+            setOpen(false);
+            queryClient.invalidateQueries({
+                queryKey: ["projects", project?.id],
+            });
+        },
+        onError: (error) => {
+            console.error(error);
+            toast.error("토큰 생성에 실패했어요.");
+        },
+    });
 
     if (isMobile) {
         return (
@@ -83,7 +83,7 @@ function GenerateClientSecretDialog() {
                         </DrawerClose>
                         <Button
                             onClick={() => generateSecret()}
-                            disabled={isLoading}
+                            disabled={isPending}
                         >
                             재발급
                         </Button>
@@ -116,7 +116,7 @@ function GenerateClientSecretDialog() {
                     </DialogClose>
                     <Button
                         onClick={() => generateSecret()}
-                        disabled={isLoading}
+                        disabled={isPending}
                     >
                         재발급
                     </Button>
@@ -193,34 +193,32 @@ function OAuthRedirectURLSection() {
 
     const {
         mutate: updateProjectRedirectURLs,
-        isLoading: isUpdateProjectRedirectURLLoading,
-    } = useMutation(
-        (redirectUrls: string[]) => {
+        isPending: isUpdateProjectRedirectURLLoading,
+    } = useMutation({
+        mutationFn: (redirectUrls: string[]) => {
             return client.CoreUpdateProject({
                 projectId: +(project?.id || ""),
                 redirectURLs: redirectUrls,
             });
         },
-        {
-            onSuccess: () => {
-                toast.success("리다이렉트 URL을 성공적으로 변경했어요.");
-                queryClient.invalidateQueries(["projects", project?.id]);
-            },
-            onError: (error) => {
-                console.error(error);
-                if (error instanceof APIResponseError) {
-                    const message = error.body.message;
-                    toast.error(
-                        typeof message === "object"
-                            ? message.join(", ")
-                            : message
-                    );
-                    return;
-                }
-                toast.error("리다이렉트 URL 변경에 실패했어요.");
-            },
-        }
-    );
+        onSuccess: () => {
+            toast.success("리다이렉트 URL을 성공적으로 변경했어요.");
+            queryClient.invalidateQueries({
+                queryKey: ["projects", project?.id],
+            });
+        },
+        onError: (error) => {
+            console.error(error);
+            if (error instanceof APIResponseError) {
+                const message = error.body.message;
+                toast.error(
+                    typeof message === "object" ? message.join(", ") : message
+                );
+                return;
+            }
+            toast.error("리다이렉트 URL 변경에 실패했어요.");
+        },
+    });
 
     useEffect(() => {
         setRedirectUrls(project?.redirectURLs || []);
@@ -311,32 +309,30 @@ function OAuthStatusSection() {
     const { project } = useProject();
     const queryClient = useQueryClient();
 
-    const { mutate, isLoading } = useMutation(
-        (value: boolean) => {
+    const { mutate, isPending } = useMutation({
+        mutationFn: (value: boolean) => {
             return client.CoreUpdateProject({
                 projectId: +(project?.id || ""),
                 oAuthStatus: value ? "Active" : "Inactive",
             });
         },
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(["projects", project?.id]);
-            },
-            onError: (error) => {
-                console.error(error);
-                if (error instanceof APIResponseError) {
-                    const message = error.body.message;
-                    toast.error(
-                        typeof message === "object"
-                            ? message.join(", ")
-                            : message
-                    );
-                    return;
-                }
-                toast.error("OAuth 상태 변경에 실패했어요.");
-            },
-        }
-    );
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["projects", project?.id],
+            });
+        },
+        onError: (error) => {
+            console.error(error);
+            if (error instanceof APIResponseError) {
+                const message = error.body.message;
+                toast.error(
+                    typeof message === "object" ? message.join(", ") : message
+                );
+                return;
+            }
+            toast.error("OAuth 상태 변경에 실패했어요.");
+        },
+    });
 
     return (
         <div className="flex items-center justify-between border rounded p-4">
@@ -344,7 +340,7 @@ function OAuthStatusSection() {
             <Switch
                 checked={project?.oAuthStatus === "Active"}
                 onCheckedChange={(e) => mutate(e)}
-                disabled={isLoading}
+                disabled={isPending}
             />
         </div>
     );

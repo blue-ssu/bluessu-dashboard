@@ -3,9 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Header } from "@/containers/Header/Header";
 import { MemberObject, client } from "@/lib/client";
 import { PlusIcon } from "@radix-ui/react-icons";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useState } from "react";
-import { useQuery } from "react-query";
 import { Link, useNavigate } from "react-router-dom";
 
 function ProjectItem({ member }: { member: MemberObject }) {
@@ -82,9 +82,10 @@ function Menu({
 export function ProjectsPage() {
     const [searchText, setSearchText] = useState("");
 
-    const { data } = useQuery(["user", "me", "member"], () =>
-        client.CoreListUserMember({ userId: "me" })
-    );
+    const { data } = useQuery({
+        queryKey: ["user", "me", "member"],
+        queryFn: () => client.CoreListUserMember({ userId: "me" }),
+    });
 
     const members = data
         ? data?.members.filter((member) =>

@@ -18,66 +18,66 @@ import { Header } from "@/containers/Header/Header";
 import { useProject } from "@/hooks/useProject";
 import { MemberObject, client } from "@/lib/client";
 import { DotsHorizontalIcon } from "@radix-ui/react-icons";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { APIResponseError } from "endpoint-client";
-import { useMutation, useQueryClient } from "react-query";
 import { toast } from "sonner";
 
 function MemberItem({ member }: { member: MemberObject }) {
     const queryClient = useQueryClient();
 
     const { projectId } = useProject();
-    const { mutate: removeMember } = useMutation(
-        () =>
+    const { mutate: removeMember } = useMutation({
+        mutationFn: () =>
             client.CoreRemoveMemberFromProject({
                 projectId: projectId,
                 memberId: member.id,
             }),
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(["projects", projectId]);
-                toast.success("멤버를 성공적으로 삭제했습니다.");
-            },
-            onError: (error) => {
-                if (error instanceof APIResponseError) {
-                    if (error.body.code === "cannot_remove_owner") {
-                        toast.error("프로젝트의 소유자는 삭제할 수 없어요.");
-                        return;
-                    }
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["projects", projectId],
+            });
+            toast.success("멤버를 성공적으로 삭제했습니다.");
+        },
+        onError: (error) => {
+            if (error instanceof APIResponseError) {
+                if (error.body.code === "cannot_remove_owner") {
+                    toast.error("프로젝트의 소유자는 삭제할 수 없어요.");
+                    return;
                 }
+            }
 
-                console.error(error);
-                toast.error("멤버 삭제에 실패했어요.");
-            },
-        }
-    );
+            console.error(error);
+            toast.error("멤버 삭제에 실패했어요.");
+        },
+    });
 
-    const { mutate: changeRole } = useMutation(
-        (role: "Member" | "Owner") =>
+    const { mutate: changeRole } = useMutation({
+        mutationFn: (role: "Member" | "Owner") =>
             client.CoreUpdateMemberRole({
                 projectId: projectId,
                 memberId: member.id,
                 role: role,
             }),
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries(["projects", projectId]);
-                toast.success("멤버의 역할을 성공적으로 변경했습니다.");
-            },
-            onError: (error) => {
-                if (error instanceof APIResponseError) {
-                    if (error.body.code === "cannot_remove_last_owner") {
-                        toast.error(
-                            "프로젝트의 마지막 소유자는 역할을 변경할 수 없어요"
-                        );
-                        return;
-                    }
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["projects", projectId],
+            });
+            toast.success("멤버의 역할을 성공적으로 변경했습니다.");
+        },
+        onError: (error) => {
+            if (error instanceof APIResponseError) {
+                if (error.body.code === "cannot_remove_last_owner") {
+                    toast.error(
+                        "프로젝트의 마지막 소유자는 역할을 변경할 수 없어요"
+                    );
+                    return;
                 }
-                console.error(error);
-                toast.error("멤버 역할 변경에 실패했어요.");
-            },
-        }
-    );
+            }
+            console.error(error);
+            toast.error("멤버 역할 변경에 실패했어요.");
+        },
+    });
 
     return (
         <TableRow>

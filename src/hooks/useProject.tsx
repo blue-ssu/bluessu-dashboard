@@ -1,7 +1,7 @@
 import { client } from "@/lib/client";
-import { useQuery } from "react-query";
 import { useParams } from "react-router-dom";
 import { useUser } from "./useUser";
+import { useQuery } from "@tanstack/react-query";
 
 export const useProject = (projectId?: string | number) => {
     const { projectId: paramsProjectId } = useParams();
@@ -10,21 +10,25 @@ export const useProject = (projectId?: string | number) => {
     const _projectId = +(projectId || paramsProjectId || "");
     if (!_projectId) throw new Error("projectId is required");
 
-    const { data: project } = useQuery(
-        ["projects", _projectId],
-        async () =>
-            (await client.CoreGetProject({ projectId: +(_projectId || "") }))
-                .project
-    );
-    const { data: members } = useQuery(
-        ["projects", _projectId, "members"],
-        async () =>
+    const { data: project } = useQuery({
+        queryKey: ["projects", _projectId],
+        queryFn: async () =>
+            (
+                await client.CoreGetProject({
+                    projectId: _projectId,
+                })
+            ).project,
+        enabled: !!_projectId,
+    });
+    const { data: members } = useQuery({
+        queryKey: ["projects", _projectId, "members"],
+        queryFn: async () =>
             (
                 await client.CoreListProjectMember({
                     projectId: +(_projectId || ""),
                 })
-            ).members
-    );
+            ).members,
+    });
 
     const member = members?.find((member) => member.user.id === user?.id);
     const isOwner = member?.role === "Owner";
